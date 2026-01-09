@@ -13,7 +13,7 @@ import com.android.photogallery.utils.FavoritesManager
 import com.bumptech.glide.Glide
 
 class ImageAdapter(
-    private val images: List<ImageResult>,
+    private var images: List<ImageResult>,
     private val onItemClick: (ImageResult) -> Unit,
 ) : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
 
@@ -55,6 +55,11 @@ class ImageAdapter(
             onFavoriteClick?.invoke(image, !isCurrentlyFavorite)
             updateFavoriteButton(holder.favoriteButton, image.id)
         }
+    }
+
+    fun updateImages(newImages: List<ImageResult>) {
+        images = newImages
+        notifyDataSetChanged()
     }
 
     private fun updateFavoriteButton(button: ImageButton, imageId: String) {
