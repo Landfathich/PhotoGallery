@@ -68,6 +68,16 @@
                 </LinearLayout>
             </ScrollView>
 
+            <ImageButton
+                android:id="@+id/favoriteButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_margin="16dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Add to favorites"
+                android:padding="8dp" />
+
             <Button
                 android:id="@+id/closeButton"
                 android:layout_width="match_parent"
