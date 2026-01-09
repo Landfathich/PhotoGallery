@@ -180,11 +180,4 @@ class SearchFragment : Fragment() {
     private fun showLoading(show: Boolean) {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
     }
-
-    companion object {
-        fun newInstance(): ImageDetailFragment {
-            val fragment = ImageDetailFragment()
-            return fragment
-        }
-    }
 }
