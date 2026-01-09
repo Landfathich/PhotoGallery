@@ -1,9 +1,13 @@
-package com.android.photogallery
+package com.android.photogallery.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
+import com.android.photogallery.adapters.ImageAdapter
+import com.android.photogallery.MainActivity
 import com.android.photogallery.databinding.FragmentSavedImagesBinding
 import com.android.photogallery.models.ImageResult
 
@@ -15,8 +19,8 @@ class SavedImagesFragment : Fragment() {
     private val savedImages = mutableListOf<ImageResult>()
 
     override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: android.view.ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
         binding = FragmentSavedImagesBinding.inflate(inflater, container, false)

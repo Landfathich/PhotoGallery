@@ -1,14 +1,19 @@
-package com.android.photogallery
+package com.android.photogallery.fragments
 
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.photogallery.adapters.ImageAdapter
+import com.android.photogallery.MainActivity
 import com.android.photogallery.api.RetrofitClient
 import com.android.photogallery.databinding.FragmentSearchBinding
+import com.android.photogallery.hideKeyboard
 import com.android.photogallery.models.ImageResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,10 +31,10 @@ class SearchFragment : Fragment() {
     private var isLoading = false
 
     override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: android.view.ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): android.view.View {
+    ): View {
         binding = FragmentSearchBinding.inflate(inflater, container, false)
         return binding.root
     }

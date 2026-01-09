@@ -1,4 +1,4 @@
-package com.android.photogallery
+package com.android.photogallery.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import com.android.photogallery.databinding.FragmentImageDetailBinding
 import com.android.photogallery.models.ImageResult
 import com.bumptech.glide.Glide
-
 
 class ImageDetailFragment : Fragment() {
 

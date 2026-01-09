@@ -1,4 +1,4 @@
-package com.android.photogallery
+package com.android.photogallery.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,7 +6,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.android.photogallery.R
 import com.android.photogallery.databinding.ItemImageBinding
+import com.android.photogallery.hideKeyboard
 import com.android.photogallery.models.ImageResult
 import com.bumptech.glide.Glide
 

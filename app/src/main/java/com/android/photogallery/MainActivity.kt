@@ -3,6 +3,9 @@ package com.android.photogallery
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.android.photogallery.databinding.ActivityMainBinding
+import com.android.photogallery.fragments.ImageDetailFragment
+import com.android.photogallery.fragments.SavedImagesFragment
+import com.android.photogallery.fragments.SearchFragment
 import com.android.photogallery.models.ImageResult
 
 class MainActivity : AppCompatActivity() {
