@@ -15,6 +15,7 @@ import com.android.photogallery.api.RetrofitClient
 import com.android.photogallery.databinding.FragmentSearchBinding
 import com.android.photogallery.hideKeyboard
 import com.android.photogallery.models.ImageResult
+import com.android.photogallery.utils.FavoritesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,6 +52,17 @@ class SearchFragment : Fragment() {
         adapter = ImageAdapter(images) { image ->
             showImageDetail(image)
         }
+
+        adapter.onFavoriteClick = { image, shouldBeFavorite ->
+            if (shouldBeFavorite) {
+                FavoritesManager.addToFavorites(image)
+                Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT).show()
+            } else {
+                FavoritesManager.removeFromFavorites(image.id)
+                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         binding.imagesRecyclerView.adapter = adapter
 
         binding.imagesRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
