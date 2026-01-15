@@ -8,7 +8,7 @@ data class ImageTag(
 // Модель для изображения
 data class ImageResult(
     val id: String,
-    val title: String,
+    val title: String?,
     val url: String,
     val thumbnail: String?,
     val creator: String?,

@@ -7,24 +7,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.android.photogallery.adapters.ImageAdapter
 import com.android.photogallery.MainActivity
+import com.android.photogallery.adapters.ImageAdapter
 import com.android.photogallery.api.RetrofitClient
 import com.android.photogallery.databinding.FragmentSearchBinding
-import com.android.photogallery.hideKeyboard
 import com.android.photogallery.models.ImageResult
-import com.android.photogallery.utils.FavoritesManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.android.photogallery.utils.extensions.favoritesRepository
+import com.android.photogallery.utils.extensions.hideKeyboard
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class SearchFragment : Fragment() {
 
     private lateinit var binding: FragmentSearchBinding
-
     private lateinit var adapter: ImageAdapter
     private val images = mutableListOf<ImageResult>()
     private var currentPage = 1
@@ -45,23 +43,17 @@ class SearchFragment : Fragment() {
 
         setupRecyclerView()
         setupListeners()
+        observeFavoriteIds()
     }
 
     private fun setupRecyclerView() {
         binding.imagesRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        adapter = ImageAdapter(images) { image ->
-            showImageDetail(image)
-        }
 
-        adapter.onFavoriteClick = { image, shouldBeFavorite ->
-            if (shouldBeFavorite) {
-                FavoritesManager.addToFavorites(image)
-                Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT).show()
-            } else {
-                FavoritesManager.removeFromFavorites(image.id)
-                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT).show()
-            }
-        }
+        adapter = ImageAdapter(
+            images = images,
+            onItemClick = { image -> showImageDetail(image) },
+            favoriteIds = emptySet()
+        )
 
         binding.imagesRecyclerView.adapter = adapter
 
@@ -89,6 +81,14 @@ class SearchFragment : Fragment() {
         })
     }
 
+    private fun observeFavoriteIds() {
+        lifecycleScope.launch {
+            favoritesRepository.getFavoriteIdsStream().collectLatest { favoriteIds ->
+                adapter.updateFavoriteIds(favoriteIds)
+            }
+        }
+    }
+
     private fun setupListeners() {
         binding.searchButton.setOnClickListener {
             val query = binding.searchEditText.text.toString()
@@ -99,6 +99,20 @@ class SearchFragment : Fragment() {
             } else {
                 Toast.makeText(requireContext(), "Please enter search query", Toast.LENGTH_SHORT)
                     .show()
+            }
+        }
+
+        adapter.onFavoriteClick = { image, shouldBeFavorite ->
+            lifecycleScope.launch {
+                if (shouldBeFavorite) {
+                    favoritesRepository.addToFavorites(image)
+                    Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    favoritesRepository.removeFromFavorites(image.id)
+                    Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
         }
     }
@@ -113,56 +127,50 @@ class SearchFragment : Fragment() {
         isLoading = true
         showLoading(true)
 
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.searchImages(
                     query = query,
                     page = currentPage,
                 )
 
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        val apiResponse = response.body()
-                        apiResponse?.let {
-                            totalPages = it.page_count
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+                    apiResponse?.let {
+                        totalPages = it.page_count
 
-                            if (currentPage == 1) {
-                                images.clear()
-                            }
-
-                            it.results?.let { results ->
-                                images.addAll(results)
-                                adapter.notifyDataSetChanged()
-                            }
-
-                            Toast.makeText(
-                                requireContext(),
-                                currentPage.toString(),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        if (currentPage == 1) {
+                            images.clear()
                         }
-                    } else {
+
+                        it.results?.let { results ->
+                            images.addAll(results)
+                            adapter.updateImages(images)
+                        }
+
                         Toast.makeText(
                             requireContext(),
-                            "Error: ${response.code()} - ${response.message()}",
+                            currentPage.toString(),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
+                } else {
                     Toast.makeText(
                         requireContext(),
-                        "Network error: ${e.message}",
+                        "Error: ${response.code()} - ${response.message()}",
                         Toast.LENGTH_SHORT
                     ).show()
-                    Log.e("API_ERROR", e.toString())
                 }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    requireContext(),
+                    "Network error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                Log.e("API_ERROR", e.toString())
             } finally {
-                withContext(Dispatchers.Main) {
-                    isLoading = false
-                    showLoading(false)
-                }
+                isLoading = false
+                showLoading(false)
             }
         }
     }

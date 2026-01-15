@@ -6,12 +6,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.android.photogallery.MainActivity
 import com.android.photogallery.adapters.ImageAdapter
 import com.android.photogallery.databinding.FragmentSavedImagesBinding
 import com.android.photogallery.models.ImageResult
-import com.android.photogallery.utils.FavoritesManager
+import com.android.photogallery.utils.extensions.favoritesRepository
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class SavedImagesFragment : Fragment() {
 
@@ -29,50 +32,57 @@ class SavedImagesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         setupRecyclerView()
-        loadFavorites()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Обновляем при каждом возвращении на фрагмент
-        loadFavorites()
-    }
-
-    private fun loadFavorites() {
-        // Берем реальные избранные картинки из FavoritesManager
-        val favorites = FavoritesManager.getFavorites()
-
-        if (favorites.isEmpty()) {
-            binding.emptyStateText.visibility = View.VISIBLE
-            binding.savedImagesRecyclerView.visibility = View.GONE
-        } else {
-            binding.emptyStateText.visibility = View.GONE
-            binding.savedImagesRecyclerView.visibility = View.VISIBLE
-            adapter.updateImages(favorites)
-        }
+        observeFavorites()
     }
 
     private fun setupRecyclerView() {
         binding.savedImagesRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        adapter = ImageAdapter(emptyList()) { image ->
-            showImageDetail(image)
-        }
+        adapter = ImageAdapter(
+            images = emptyList(),
+            onItemClick = { image -> showImageDetail(image) },
+            favoriteIds = emptySet()
+        )
 
-        // Добавляем обработчик для кнопки избранного
         adapter.onFavoriteClick = { image, shouldBeFavorite ->
-            if (!shouldBeFavorite) {
-                // Если нажали на звезду (удаляем из избранного)
-                FavoritesManager.removeFromFavorites(image.id)
-                loadFavorites() // Перезагружаем список
-                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
-                    .show()
+            lifecycleScope.launch {
+                if (!shouldBeFavorite) {
+                    favoritesRepository.removeFromFavorites(image.id)
+                    Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
-            // Если shouldBeFavorite = true, игнорируем (нельзя добавить в избранном)
         }
 
         binding.savedImagesRecyclerView.adapter = adapter
+    }
+
+    private fun observeFavorites() {
+        lifecycleScope.launch {
+            favoritesRepository.getFavoritesStream().collectLatest { favorites ->
+                if (favorites.isEmpty()) {
+                    showEmptyState()
+                } else {
+                    showFavoritesList(favorites)
+                }
+            }
+        }
+    }
+
+    private fun showFavoritesList(favorites: List<ImageResult>) {
+        binding.emptyStateText.visibility = View.GONE
+        binding.savedImagesRecyclerView.visibility = View.VISIBLE
+
+        val favoriteIds = favorites.map { it.id }.toSet()
+        adapter.updateImages(favorites)
+        adapter.updateFavoriteIds(favoriteIds)
+    }
+
+    private fun showEmptyState() {
+        binding.emptyStateText.visibility = View.VISIBLE
+        binding.savedImagesRecyclerView.visibility = View.GONE
     }
 
     private fun showImageDetail(image: ImageResult) {

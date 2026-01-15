@@ -6,10 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.android.photogallery.databinding.FragmentImageDetailBinding
 import com.android.photogallery.models.ImageResult
-import com.android.photogallery.utils.FavoritesManager
+import com.android.photogallery.utils.extensions.favoritesRepository
 import com.bumptech.glide.Glide
+import kotlinx.coroutines.launch
 
 class ImageDetailFragment : Fragment() {
 
@@ -52,28 +54,38 @@ class ImageDetailFragment : Fragment() {
             }
         }
 
-        updateFavoriteButton()
+        loadFavoriteStatus()
 
-        // Обработчик клика на кнопку избранного
         binding.favoriteButton.setOnClickListener {
-            val isCurrentlyFavorite = FavoritesManager.isFavorite(image.id)
-
-            if (isCurrentlyFavorite) {
-                FavoritesManager.removeFromFavorites(image.id)
-                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
-                    .show()
-            } else {
-                FavoritesManager.addToFavorites(image)
-                Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT).show()
-            }
-
-            updateFavoriteButton()
+            toggleFavoriteStatus()
         }
     }
 
-    private fun updateFavoriteButton() {
-        val isFavorite = FavoritesManager.isFavorite(image.id)
+    private fun loadFavoriteStatus() {
+        lifecycleScope.launch {
+            val isFavorite = favoritesRepository.isFavorite(image.id)
+            updateFavoriteButton(isFavorite)
+        }
+    }
 
+    private fun toggleFavoriteStatus() {
+        lifecycleScope.launch {
+            val isCurrentlyFavorite = favoritesRepository.isFavorite(image.id)
+
+            if (isCurrentlyFavorite) {
+                favoritesRepository.removeFromFavorites(image.id)
+                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
+                    .show()
+                updateFavoriteButton(false)
+            } else {
+                favoritesRepository.addToFavorites(image)
+                Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT).show()
+                updateFavoriteButton(true)
+            }
+        }
+    }
+
+    private fun updateFavoriteButton(isFavorite: Boolean) {
         val iconRes = if (isFavorite) {
             android.R.drawable.btn_star_big_on
         } else {

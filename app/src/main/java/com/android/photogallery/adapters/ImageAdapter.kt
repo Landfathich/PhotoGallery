@@ -7,14 +7,14 @@ import android.widget.ImageButton
 import androidx.recyclerview.widget.RecyclerView
 import com.android.photogallery.R
 import com.android.photogallery.databinding.ItemImageBinding
-import com.android.photogallery.hideKeyboard
 import com.android.photogallery.models.ImageResult
-import com.android.photogallery.utils.FavoritesManager
+import com.android.photogallery.utils.extensions.hideKeyboard
 import com.bumptech.glide.Glide
 
 class ImageAdapter(
     private var images: List<ImageResult>,
     private val onItemClick: (ImageResult) -> Unit,
+    private var favoriteIds: Set<String> = emptySet()
 ) : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
 
     var onFavoriteClick: ((ImageResult, Boolean) -> Unit)? = null
@@ -43,7 +43,8 @@ class ImageAdapter(
         holder.titleView.text = image.title
         holder.licenseView.text = "License: ${image.license}"
 
-        updateFavoriteButton(holder.favoriteButton, image.id)
+        val isFavorite = favoriteIds.contains(image.id)
+        updateFavoriteButton(holder.favoriteButton, isFavorite)
 
         holder.itemView.setOnClickListener {
             it.hideKeyboard()
@@ -51,19 +52,13 @@ class ImageAdapter(
         }
 
         holder.favoriteButton.setOnClickListener {
-            val isCurrentlyFavorite = FavoritesManager.isFavorite(image.id)
+            val isCurrentlyFavorite = favoriteIds.contains(image.id)
             onFavoriteClick?.invoke(image, !isCurrentlyFavorite)
-            updateFavoriteButton(holder.favoriteButton, image.id)
+            updateFavoriteButton(holder.favoriteButton, !isCurrentlyFavorite)
         }
     }
 
-    fun updateImages(newImages: List<ImageResult>) {
-        images = newImages
-        notifyDataSetChanged()
-    }
-
-    private fun updateFavoriteButton(button: ImageButton, imageId: String) {
-        val isFavorite = FavoritesManager.isFavorite(imageId)
+    private fun updateFavoriteButton(button: ImageButton, isFavorite: Boolean) {
         val iconRes = if (isFavorite) {
             android.R.drawable.btn_star_big_on
         } else {
@@ -73,4 +68,14 @@ class ImageAdapter(
     }
 
     override fun getItemCount() = images.size
+
+    fun updateImages(newImages: List<ImageResult>) {
+        images = newImages
+        notifyDataSetChanged()
+    }
+
+    fun updateFavoriteIds(newFavoriteIds: Set<String>) {
+        favoriteIds = newFavoriteIds
+        notifyDataSetChanged()
+    }
 }
