@@ -1,5 +1,6 @@
-package com.android.photogallery
+package com.android.photogallery.utils.extensions
 
+import android.R.id.content
 import android.app.Activity
 import android.content.Context
 import android.view.View
@@ -8,11 +9,11 @@ import androidx.fragment.app.Fragment
 
 fun Activity.hideKeyboard() {
     val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-    imm.hideSoftInputFromWindow(findViewById<View>(android.R.id.content).windowToken, 0)
+    imm.hideSoftInputFromWindow(findViewById<View>(content).windowToken, 0)
 }
 
 fun Fragment.hideKeyboard() {
-    activity?.hideKeyboard()
+    view?.hideKeyboard()
 }
 
 fun View.hideKeyboard() {
