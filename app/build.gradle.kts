@@ -40,7 +40,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -64,5 +63,9 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.0")
+
+    // Fragment KTX - расширения Kotlin для работы с фрагментами
+    // Предоставляет удобные делегаты, такие как by viewModels()
+    // которые упрощают получение ViewModel во фрагментах
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 }

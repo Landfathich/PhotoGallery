@@ -1,5 +1,6 @@
 package com.android.photogallery.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.photogallery.api.RetrofitClient
@@ -70,7 +71,7 @@ class SearchViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                // Ошибки пока не обрабатываем, добавим позже
+                Log.e("API_ERROR", e.toString())
             } finally {
                 _isLoading.value = false
             }
