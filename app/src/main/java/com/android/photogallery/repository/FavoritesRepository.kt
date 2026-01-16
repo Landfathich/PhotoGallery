@@ -39,10 +39,14 @@ class FavoritesRepository(context: Context) {
         @Volatile
         private var INSTANCE: FavoritesRepository? = null
 
-        fun getInstance(context: Context): FavoritesRepository {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: FavoritesRepository(context).also { INSTANCE = it }
-            }
+        fun getInstance(): FavoritesRepository {
+            return INSTANCE ?: throw IllegalStateException(
+                "FavoritesRepository must be initialized first! Call init() in Application class."
+            )
+        }
+
+        fun init(context: Context) {
+            INSTANCE = FavoritesRepository(context.applicationContext)
         }
     }
 }

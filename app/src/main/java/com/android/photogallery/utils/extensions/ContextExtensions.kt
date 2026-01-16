@@ -23,4 +23,4 @@ fun View.hideKeyboard() {
 }
 
 val Fragment.favoritesRepository: FavoritesRepository
-    get() = FavoritesRepository.getInstance(requireContext().applicationContext)
+    get() = FavoritesRepository.getInstance()
