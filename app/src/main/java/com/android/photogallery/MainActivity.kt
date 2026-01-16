@@ -6,7 +6,6 @@ import com.android.photogallery.databinding.ActivityMainBinding
 import com.android.photogallery.fragments.ImageDetailFragment
 import com.android.photogallery.fragments.SavedImagesFragment
 import com.android.photogallery.fragments.SearchFragment
-import com.android.photogallery.models.ImageResult
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,8 +41,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun showImageDetail(image: ImageResult) {
-        val fragment = ImageDetailFragment.newInstance(image)
+    fun showImageDetail() {
+        val fragment = ImageDetailFragment()
         supportFragmentManager.beginTransaction()
             .setCustomAnimations(
                 R.anim.fragment_slide_up,

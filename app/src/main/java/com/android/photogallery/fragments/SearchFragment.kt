@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.android.photogallery.MainActivity
 import com.android.photogallery.adapters.ImageAdapter
 import com.android.photogallery.databinding.FragmentSearchBinding
-import com.android.photogallery.models.ImageResult
 import com.android.photogallery.utils.extensions.hideKeyboard
 import com.android.photogallery.viewmodels.SearchViewModel
+import com.android.photogallery.viewmodels.SharedViewModel
 import kotlinx.coroutines.launch
 
 class SearchFragment : Fragment() {
@@ -23,6 +23,7 @@ class SearchFragment : Fragment() {
     private lateinit var binding: FragmentSearchBinding
     private lateinit var adapter: ImageAdapter
     private val viewModel: SearchViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,7 +48,10 @@ class SearchFragment : Fragment() {
         // Создаем адаптер с пустым списком, данные придут из ViewModel
         adapter = ImageAdapter(
             images = emptyList(),
-            onItemClick = { image -> showImageDetail(image) },
+            onItemClick = { image ->
+                sharedViewModel.setCurrentImage(image)
+                (requireActivity() as MainActivity).showImageDetail()
+            },
             favoriteIds = emptySet()
         )
 
@@ -137,10 +141,6 @@ class SearchFragment : Fragment() {
                 "Removed from favorites"
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun showImageDetail(image: ImageResult) {
-        (requireActivity() as MainActivity).showImageDetail(image)
     }
 
     private fun showLoading(show: Boolean) {
