@@ -6,20 +6,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.android.photogallery.MainActivity
 import com.android.photogallery.adapters.ImageAdapter
 import com.android.photogallery.databinding.FragmentSavedImagesBinding
 import com.android.photogallery.models.ImageResult
-import com.android.photogallery.utils.extensions.favoritesRepository
-import kotlinx.coroutines.flow.collectLatest
+import com.android.photogallery.viewmodels.SavedImagesViewModel
 import kotlinx.coroutines.launch
 
 class SavedImagesFragment : Fragment() {
 
     private lateinit var binding: FragmentSavedImagesBinding
     private lateinit var adapter: ImageAdapter
+
+    // Добавляем ViewModel
+    private val viewModel: SavedImagesViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,7 +37,7 @@ class SavedImagesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
-        observeFavorites()
+        observeViewModel()
     }
 
     private fun setupRecyclerView() {
@@ -47,21 +50,21 @@ class SavedImagesFragment : Fragment() {
         )
 
         adapter.onFavoriteClick = { image, shouldBeFavorite ->
-            lifecycleScope.launch {
-                if (!shouldBeFavorite) {
-                    favoritesRepository.removeFromFavorites(image.id)
-                    Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
-                        .show()
-                }
+            // Вызываем метод ViewModel вместо прямого вызова репозитория
+            if (!shouldBeFavorite) {
+                viewModel.removeFromFavorites(image.id)
+                Toast.makeText(requireContext(), "Removed from favorites", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
         binding.savedImagesRecyclerView.adapter = adapter
     }
 
-    private fun observeFavorites() {
-        lifecycleScope.launch {
-            favoritesRepository.getFavoritesStream().collectLatest { favorites ->
+    private fun observeViewModel() {
+        // Наблюдаем за списком избранных
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.favorites.collect { favorites ->
                 if (favorites.isEmpty()) {
                     showEmptyState()
                 } else {
@@ -69,15 +72,19 @@ class SavedImagesFragment : Fragment() {
                 }
             }
         }
+
+        // Наблюдаем за ID избранных (для обновления адаптера)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.favoriteIds.collect { favoriteIds ->
+                adapter.updateFavoriteIds(favoriteIds)
+            }
+        }
     }
 
     private fun showFavoritesList(favorites: List<ImageResult>) {
         binding.emptyStateText.visibility = View.GONE
         binding.savedImagesRecyclerView.visibility = View.VISIBLE
-
-        val favoriteIds = favorites.map { it.id }.toSet()
         adapter.updateImages(favorites)
-        adapter.updateFavoriteIds(favoriteIds)
     }
 
     private fun showEmptyState() {
